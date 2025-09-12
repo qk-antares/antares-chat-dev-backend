@@ -29,4 +29,33 @@ knife4j:
     language: zh_cn
 ```
 
+#### 与前端openapi2ts 配合使用
+
+1. 安装 openapi2ts
+
+```bash
+pnpm add -D openapi2ts
+pnpm add -D tslib
+```
+2. 在 package.json 中添加脚本
+
+```json
+"scripts": {
+  "openapi": "openapi2ts"
+}
+```
+
+3. 在项目根目录创建 openapi2ts.config.ts 文件，内容如下
+
+```ts
+// 根据后端接口生成前端请求和 TS 模型代码
+export default {
+  requestLibPath: "import request from '@/request'",
+  schemaPath: 'http://127.0.0.1:8014/api/v3/api-docs',
+  serversPath: './src',
+}
+```
+
+
+### Mybatis Flex
 
