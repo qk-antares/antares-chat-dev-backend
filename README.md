@@ -192,3 +192,19 @@ public class MyBatisCodeGenerator {
 @Id(keyType = KeyType.Generator, value = KeyGenerators.snowFlakeId)
 private Long id;
 ```
+
+
+### 设计模式
+
+#### 门面模式
+设计AiCodeGeneratorFacade来协调AiCodeGeneratorService、CodeFileSaver和CodeParser的调用，最终只给用户暴漏统一的接口：
+- public File generateAndSaveCode(String userMessage, CodeGenTypeEnum codeGenTypeEnum)
+- public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum)
+用户无需关心不同的CodeGenTypeEnum对应的生成逻辑以及所依赖的其他类，只需调用门面类的统一接口即可完成代码生成和保存的功能。
+
+#### 策略模式
+不同的CodeGenTypeEnum对应不同的文本解析策略，设计CodeParser<T>接口来定义文本解析为代码的抽象层，不同的实现类，如HtmlCodeParser、MultiFileCodeParser分别用于从大模型返回的文本提取HTML代码片段和多文件代码片段，且易于拓展。此外这里用到了泛型，因为不同的解析策略解析的结果类型也不同。
+
+#### 模板方法模式
+不同的CodeGenTypeEnum在生成代码后的保存流程上是类似的，都是[1.验证输入->2.构建唯一目录->3.保存文件（具体实现交给子类）->4.返回文件目录对象]。设计CodeFileSaver抽象模板类来定义保存代码的模板方法`public final File saveCode(T result)`，该方法由`final`修饰不允许重写，而将具体的[1,2,3,4]步骤定义为protected方法（还可能是抽线的），不同的子类可以具体实现或者重写。这样可以复用公共的流程逻辑，同时允许子类定制具体的实现细节。
+
