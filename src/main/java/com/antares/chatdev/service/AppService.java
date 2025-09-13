@@ -4,9 +4,12 @@ import java.util.List;
 
 import com.antares.chatdev.model.dto.AppQueryRequest;
 import com.antares.chatdev.model.entity.App;
+import com.antares.chatdev.model.entity.User;
 import com.antares.chatdev.model.vo.AppVO;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
+
+import reactor.core.publisher.Flux;
 
 /**
  * 应用 服务层。
@@ -38,5 +41,7 @@ public interface AppService extends IService<App> {
      * @return
      */
     AppVO getAppVO(App app);
+
+    Flux<String> chatToGenCode(Long appId, String message, User loginUser);
 
 }

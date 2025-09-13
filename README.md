@@ -208,3 +208,39 @@ private Long id;
 #### 模板方法模式
 不同的CodeGenTypeEnum在生成代码后的保存流程上是类似的，都是[1.验证输入->2.构建唯一目录->3.保存文件（具体实现交给子类）->4.返回文件目录对象]。设计CodeFileSaver抽象模板类来定义保存代码的模板方法`public final File saveCode(T result)`，该方法由`final`修饰不允许重写，而将具体的[1,2,3,4]步骤定义为protected方法（还可能是抽线的），不同的子类可以具体实现或者重写。这样可以复用公共的流程逻辑，同时允许子类定制具体的实现细节。
 
+### Java
+
+#### SSE与Flux
+ServerSentEvent（SSE）是一种服务端向浏览器单向推送数据的协议，常用于实时消息推送。
+
+Flux 是 Spring WebFlux 提供的响应式流（reactive stream）类型，可以表示0到N个异步数据项的流。
+
+关系：  
+在 Spring WebFlux 中，SSE 的数据推送通常就是通过返回 `Flux<T>`（如 `Flux<String>` 或 `Flux<ServerSentEvent<T>>`）实现的。  
+也就是说，Flux 作为数据流，SSE 作为传输协议，二者结合可以实现服务端实时、分批地向前端推送数据。
+
+
+#### `yield` 关键字
+在 Java 的 switch 表达式中，yield 关键字用于返回一个值作为该 case 的结果。
+它的作用是：在 switch 表达式的某个分支内，将一个值“产出”给整个 switch 表达式。
+这样 switch 语句就可以像三元表达式一样有返回值，yield 后面跟的就是这个分支的结果。
+
+
+# 1. 用户登录
+curl -X POST "http://localhost:8014/api/user/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userAccount": "antares",
+    "userPassword": "12345678"
+  }' \
+  -c cookies.txt
+
+# 2. 调用生成代码接口（流式）
+curl -G "http://localhost:8014/api/app/chat/gen/code" \
+  --data-urlencode "appId=324296704651251712" \
+  --data-urlencode "message=做一个贪吃蛇游戏网站" \
+  -H "Accept: text/event-stream" \
+  -H "Cache-Control: no-cache" \
+  -b cookies.txt \
+  --no-buffer
+
