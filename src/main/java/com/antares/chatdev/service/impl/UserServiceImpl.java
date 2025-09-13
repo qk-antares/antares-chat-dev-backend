@@ -11,7 +11,7 @@ import com.antares.chatdev.constant.UserConstant;
 import com.antares.chatdev.exception.BusinessException;
 import com.antares.chatdev.exception.ErrorCode;
 import com.antares.chatdev.mapper.UserMapper;
-import com.antares.chatdev.model.dto.UserQueryRequest;
+import com.antares.chatdev.model.dto.user.UserQueryRequest;
 import com.antares.chatdev.model.entity.User;
 import com.antares.chatdev.model.enums.UserRoleEnum;
 import com.antares.chatdev.model.vo.LoginUserVO;

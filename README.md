@@ -244,3 +244,4 @@ curl -G "http://localhost:8014/api/app/chat/gen/code" \
   -b cookies.txt \
   --no-buffer
 
+部署服务本质上就是将代码拷贝到nginx代理的一个目录下，从而提供对外访问能力

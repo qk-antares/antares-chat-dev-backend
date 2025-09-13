@@ -23,10 +23,11 @@ import com.antares.chatdev.constant.UserConstant;
 import com.antares.chatdev.exception.BusinessException;
 import com.antares.chatdev.exception.ErrorCode;
 import com.antares.chatdev.exception.ThrowUtils;
-import com.antares.chatdev.model.dto.AppAddRequest;
-import com.antares.chatdev.model.dto.AppQueryRequest;
-import com.antares.chatdev.model.dto.AppUpdateAdminRequest;
-import com.antares.chatdev.model.dto.AppUpdateRequest;
+import com.antares.chatdev.model.dto.app.AppAddRequest;
+import com.antares.chatdev.model.dto.app.AppDeployRequest;
+import com.antares.chatdev.model.dto.app.AppQueryRequest;
+import com.antares.chatdev.model.dto.app.AppUpdateAdminRequest;
+import com.antares.chatdev.model.dto.app.AppUpdateRequest;
 import com.antares.chatdev.model.entity.App;
 import com.antares.chatdev.model.entity.User;
 import com.antares.chatdev.model.enums.CodeGenTypeEnum;
@@ -59,8 +60,8 @@ public class AppController {
     @Autowired
     private UserService userService;
 
-    // region 聊天生成功能
-    
+    // region 生成部署功能
+
     /**
      * 应用聊天生成代码（流式 SSE）
      *
@@ -82,16 +83,34 @@ public class AppController {
         Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser);
         // 转换为ServerSentEvent格式
         return contentFlux.map(chunk -> {
-            //将内容包装成JSON
+            // 将内容包装成JSON
             Map<String, String> wrapper = Map.of("d", chunk);
             String jsonData = JSONUtil.toJsonStr(wrapper);
             return ServerSentEvent.<String>builder()
                     .data(jsonData)
                     .build();
         }).concatWith(Mono.just(
-            //发送结束事件
-            ServerSentEvent.<String>builder().event("done").data("").build()
-        ));
+                // 发送结束事件
+                ServerSentEvent.<String>builder().event("done").data("").build()));
+    }
+
+    /**
+     * 应用部署
+     *
+     * @param appDeployRequest 部署请求
+     * @param request          请求
+     * @return 部署 URL
+     */
+    @PostMapping("/deploy")
+    public BaseResponse<String> deployApp(@RequestBody AppDeployRequest appDeployRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(appDeployRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = appDeployRequest.getAppId();
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 调用服务部署应用
+        String deployUrl = appService.deployApp(appId, loginUser);
+        return ResultUtils.success(deployUrl);
     }
 
     // endregion

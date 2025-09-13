@@ -1,0 +1,3 @@
+GET http://localhost:8014/api/app/chat/gen/code?appId=324296604210253824&message=编程博客分享网站
+Content-Type: application/json
+Cookie: JSESSIONID=3081578ED36FB81EB5C3ACD88E0B6E3D

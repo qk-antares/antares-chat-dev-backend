@@ -2,7 +2,7 @@ package com.antares.chatdev.service;
 
 import java.util.List;
 
-import com.antares.chatdev.model.dto.AppQueryRequest;
+import com.antares.chatdev.model.dto.app.AppQueryRequest;
 import com.antares.chatdev.model.entity.App;
 import com.antares.chatdev.model.entity.User;
 import com.antares.chatdev.model.vo.AppVO;
@@ -43,5 +43,7 @@ public interface AppService extends IService<App> {
     AppVO getAppVO(App app);
 
     Flux<String> chatToGenCode(Long appId, String message, User loginUser);
+
+    String deployApp(Long appId, User loginUser);
 
 }

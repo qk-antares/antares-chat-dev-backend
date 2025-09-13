@@ -3,6 +3,7 @@ package com.antares.chatdev.core.saver;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 
+import com.antares.chatdev.constant.AppConstant;
 import com.antares.chatdev.exception.BusinessException;
 import com.antares.chatdev.exception.ErrorCode;
 import com.antares.chatdev.model.enums.CodeGenTypeEnum;
@@ -20,7 +21,7 @@ public abstract class CodeFileSaverTemplate<T> {
     /**
      * 文件保存的根目录
      */
-    private static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
+    private static final String FILE_SAVE_ROOT_DIR = AppConstant.CODE_OUTPUT_ROOT_DIR;
 
     /**
      * 模板方法：保存代码的标准流程（使用 appId）

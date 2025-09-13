@@ -1,14 +1,14 @@
-package com.antares.chatdev.model.dto;
+package com.antares.chatdev.model.dto.user;
 
 import java.io.Serializable;
 
 import lombok.Data;
 
 /**
- * 用户注册请求
+ * 用户登录
  */
 @Data
-public class UserRegisterRequest implements Serializable {
+public class UserLoginRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -21,9 +21,4 @@ public class UserRegisterRequest implements Serializable {
      * 密码
      */
     private String userPassword;
-
-    /**
-     * 确认密码
-     */
-    private String checkPassword;
 }

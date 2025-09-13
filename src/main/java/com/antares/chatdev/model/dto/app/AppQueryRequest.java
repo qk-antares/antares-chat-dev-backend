@@ -1,4 +1,4 @@
-package com.antares.chatdev.model.dto;
+package com.antares.chatdev.model.dto.app;
 
 import java.io.Serializable;
 

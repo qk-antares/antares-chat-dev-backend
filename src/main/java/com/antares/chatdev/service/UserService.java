@@ -2,7 +2,7 @@ package com.antares.chatdev.service;
 
 import java.util.List;
 
-import com.antares.chatdev.model.dto.UserQueryRequest;
+import com.antares.chatdev.model.dto.user.UserQueryRequest;
 import com.antares.chatdev.model.entity.User;
 import com.antares.chatdev.model.vo.LoginUserVO;
 import com.antares.chatdev.model.vo.UserVO;
