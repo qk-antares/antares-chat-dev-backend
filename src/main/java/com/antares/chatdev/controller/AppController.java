@@ -273,7 +273,7 @@ public class AppController {
      */
     @PostMapping("/admin/delete")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> deleteAppAdmin(@RequestBody DeleteRequest deleteRequest) {
+    public BaseResponse<Boolean> deleteAppByAdmin(@RequestBody DeleteRequest deleteRequest) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -286,7 +286,7 @@ public class AppController {
      */
     @PostMapping("/admin/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> updateAppAdmin(@RequestBody AppUpdateAdminRequest appUpdateAdminRequest) {
+    public BaseResponse<Boolean> updateAppByAdmin(@RequestBody AppUpdateAdminRequest appUpdateAdminRequest) {
         if (appUpdateAdminRequest == null || appUpdateAdminRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
