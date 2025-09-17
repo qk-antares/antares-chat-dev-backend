@@ -1,4 +1,4 @@
-package com.antares.chatdev.ai;
+package com.antares.chatdev.ai.service;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,13 +17,15 @@ class AiCodeGeneratorServiceTest {
 
     @Test
     void generateHtmlCode() {
-        HtmlCodeResult result = aiCodeGeneratorService.generateHtmlCode("做个程序员鱼皮的工作记录小工具");
-        Assertions.assertNotNull(result);
+        // HtmlCodeResult result = aiCodeGeneratorService.generateHtmlCode(1L, "做个情人节表白网站");
+        // Assertions.assertNotNull(result);
+        HtmlCodeResult result2 = aiCodeGeneratorService.generateHtmlCode(1L, "不要生成网站，告诉我你刚才做了什么？");
+        Assertions.assertNotNull(result2);
     }
 
     @Test
     void generateMultiFileCode() {
-        MultiFileCodeResult multiFileCode = aiCodeGeneratorService.generateMultiFileCode("做个程序员鱼皮的留言板");
+        MultiFileCodeResult multiFileCode = aiCodeGeneratorService.generateMultiFileCode(2L, "做个程序员鱼皮的留言板");
         Assertions.assertNotNull(multiFileCode);
     }
 }

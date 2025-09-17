@@ -9,6 +9,8 @@ import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 
+import dev.langchain4j.memory.ChatMemory;
+
 /**
  * 对话历史 服务层。
  *
@@ -30,5 +32,7 @@ public interface ChatHistoryService extends IService<ChatHistory> {
     QueryWrapper getQueryWrapper(ChatHistoryQueryRequest chatHistoryQueryRequest);
 
     Page<ChatHistory> listAppChatHistoryByPage(Long appId, int pageSize, LocalDateTime lastCreateTime, User loginUser);
+
+    int loadChatHistoryToMemory(Long appId, ChatMemory chatMemory, int maxCount);
 
 }

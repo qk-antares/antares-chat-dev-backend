@@ -4,9 +4,11 @@ import java.io.File;
 
 import org.springframework.stereotype.Service;
 
-import com.antares.chatdev.ai.AiCodeGeneratorService;
 import com.antares.chatdev.ai.model.HtmlCodeResult;
 import com.antares.chatdev.ai.model.MultiFileCodeResult;
+import com.antares.chatdev.ai.service.AiCodeGeneratorService;
+import com.antares.chatdev.ai.service.ReasoningStreamingAiCodeGeneratorService;
+import com.antares.chatdev.ai.service.StreamingAiCodeGeneratorService;
 import com.antares.chatdev.core.parser.CodeParserExecutor;
 import com.antares.chatdev.core.saver.CodeFileSaverExecutor;
 import com.antares.chatdev.exception.BusinessException;
@@ -26,6 +28,10 @@ public class AiCodeGeneratorFacade {
 
     @Resource
     private AiCodeGeneratorService aiCodeGeneratorService;
+    @Resource
+    private StreamingAiCodeGeneratorService streamingAiCodeGeneratorService;
+    @Resource
+    private ReasoningStreamingAiCodeGeneratorService reasoningStreamingAiCodeGeneratorService;
 
     /**
      * 统一入口：根据类型生成并保存代码
@@ -40,11 +46,11 @@ public class AiCodeGeneratorFacade {
         }
         return switch (codeGenTypeEnum) {
             case HTML -> {
-                HtmlCodeResult result = aiCodeGeneratorService.generateHtmlCode(userMessage);
+                HtmlCodeResult result = aiCodeGeneratorService.generateHtmlCode(appId, userMessage);
                 yield CodeFileSaverExecutor.executeSaver(result, CodeGenTypeEnum.HTML, appId);
             }
             case MULTI_FILE -> {
-                MultiFileCodeResult result = aiCodeGeneratorService.generateMultiFileCode(userMessage);
+                MultiFileCodeResult result = aiCodeGeneratorService.generateMultiFileCode(appId, userMessage);
                 yield CodeFileSaverExecutor.executeSaver(result, CodeGenTypeEnum.MULTI_FILE, appId);
             }
             default -> {
@@ -67,11 +73,15 @@ public class AiCodeGeneratorFacade {
         }
         return switch (codeGenTypeEnum) {
             case HTML -> {
-                Flux<String> codeStream = aiCodeGeneratorService.generateHtmlCodeStream(userMessage);
+                Flux<String> codeStream = streamingAiCodeGeneratorService.generateHtmlCodeStream(appId, userMessage);
                 yield processCodeStream(codeStream, CodeGenTypeEnum.HTML, appId);
             }
             case MULTI_FILE -> {
-                Flux<String> codeStream = aiCodeGeneratorService.generateMultiFileCodeStream(userMessage);
+                Flux<String> codeStream = streamingAiCodeGeneratorService.generateMultiFileCodeStream(appId, userMessage);
+                yield processCodeStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId);
+            }
+            case VUE_PROJECT -> {
+                Flux<String> codeStream = reasoningStreamingAiCodeGeneratorService.generateVueProjectCodeStream(appId, userMessage);
                 yield processCodeStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId);
             }
             default -> {
