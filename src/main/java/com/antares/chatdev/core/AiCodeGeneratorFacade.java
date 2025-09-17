@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 
 import com.antares.chatdev.ai.model.HtmlCodeResult;
 import com.antares.chatdev.ai.model.MultiFileCodeResult;
+import com.antares.chatdev.ai.model.message.AiResponseMessage;
+import com.antares.chatdev.ai.model.message.ToolExecutedMessage;
+import com.antares.chatdev.ai.model.message.ToolRequestMessage;
 import com.antares.chatdev.ai.service.AiCodeGeneratorService;
 import com.antares.chatdev.ai.service.ReasoningStreamingAiCodeGeneratorService;
 import com.antares.chatdev.ai.service.StreamingAiCodeGeneratorService;
@@ -15,6 +18,10 @@ import com.antares.chatdev.exception.BusinessException;
 import com.antares.chatdev.exception.ErrorCode;
 import com.antares.chatdev.model.enums.CodeGenTypeEnum;
 
+import cn.hutool.json.JSONUtil;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.tool.ToolExecution;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
@@ -77,12 +84,14 @@ public class AiCodeGeneratorFacade {
                 yield processCodeStream(codeStream, CodeGenTypeEnum.HTML, appId);
             }
             case MULTI_FILE -> {
-                Flux<String> codeStream = streamingAiCodeGeneratorService.generateMultiFileCodeStream(appId, userMessage);
+                Flux<String> codeStream = streamingAiCodeGeneratorService.generateMultiFileCodeStream(appId,
+                        userMessage);
                 yield processCodeStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId);
             }
             case VUE_PROJECT -> {
-                Flux<String> codeStream = reasoningStreamingAiCodeGeneratorService.generateVueProjectCodeStream(appId, userMessage);
-                yield processCodeStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId);
+                TokenStream tokenStream = reasoningStreamingAiCodeGeneratorService.generateVueProjectCodeStream(appId,
+                        userMessage);
+                yield processTokenStream(tokenStream);
             }
             default -> {
                 String errorMessage = "不支持的生成类型：" + codeGenTypeEnum.getValue();
@@ -118,4 +127,37 @@ public class AiCodeGeneratorFacade {
             }
         });
     }
+
+    /**
+     * 将 TokenStream 转换为 Flux<String>，并传递工具调用信息
+     *
+     * @param tokenStream TokenStream 对象
+     * @return Flux<String> 流式响应
+     */
+    private Flux<String> processTokenStream(TokenStream tokenStream) {
+        return Flux.create(sink -> {
+            tokenStream
+                    .onPartialResponse((String partialResponse) -> {
+                        AiResponseMessage aiResponseMessage = new AiResponseMessage(partialResponse);
+                        sink.next(JSONUtil.toJsonStr(aiResponseMessage));
+                    })
+                    .onPartialToolExecutionRequest((index, toolExecutionRequest) -> {
+                        ToolRequestMessage toolRequestMessage = new ToolRequestMessage(toolExecutionRequest);
+                        sink.next(JSONUtil.toJsonStr(toolRequestMessage));
+                    })
+                    .onToolExecuted((ToolExecution toolExecution) -> {
+                        ToolExecutedMessage toolExecutedMessage = new ToolExecutedMessage(toolExecution);
+                        sink.next(JSONUtil.toJsonStr(toolExecutedMessage));
+                    })
+                    .onCompleteResponse((ChatResponse response) -> {
+                        sink.complete();
+                    })
+                    .onError((Throwable error) -> {
+                        error.printStackTrace();
+                        sink.error(error);
+                    })
+                    .start();
+        });
+    }
+
 }
