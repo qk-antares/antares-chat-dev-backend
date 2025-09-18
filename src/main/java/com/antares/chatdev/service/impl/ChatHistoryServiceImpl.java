@@ -1,7 +1,6 @@
 package com.antares.chatdev.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.context.annotation.Lazy;
@@ -77,7 +76,7 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
                 return 0;
             }
             // 反转列表，确保按时间正序（老的在前，新的在后）
-            Collections.reverse(historyList);
+            historyList.reversed();
             
             // 按时间顺序添加到记忆中
             int loadedCount = 0;
