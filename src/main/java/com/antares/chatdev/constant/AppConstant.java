@@ -23,8 +23,13 @@ public interface AppConstant {
     String CODE_DEPLOY_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_deploy";
 
     /**
+     * 封面图目录
+     */
+    String COVER_IMAGE_DIR = System.getProperty("user.dir") + "/tmp/screenshots";
+
+    /**
      * 应用部署域名
      */
-    String CODE_DEPLOY_HOST = "https://chatdev-demo.fffu.fun";
+    String CODE_DEPLOY_HOST = "https://chatdev.fffu.fun:44480/demo";
 
 }

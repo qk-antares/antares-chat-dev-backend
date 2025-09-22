@@ -29,6 +29,7 @@ import com.antares.chatdev.model.vo.UserVO;
 import com.antares.chatdev.service.AppService;
 import com.antares.chatdev.service.ChatHistoryService;
 import com.antares.chatdev.service.UserService;
+import com.antares.chatdev.utils.WebScreenshotUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 
@@ -150,8 +151,33 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         updateApp.setDeployedTime(LocalDateTime.now());
         boolean updateResult = this.updateById(updateApp);
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新应用部署信息失败");
-        // 10. 返回可访问的 URL
-        return String.format("%s/%s/", AppConstant.CODE_DEPLOY_HOST, deployKey);
+        // 10. 构建应用访问 URL
+        String appDeployUrl = String.format("%s/%s/", AppConstant.CODE_DEPLOY_HOST, deployKey);
+        // 11. 异步生成截图并更新应用封面
+        generateAppScreenshotAsync(appId, appDeployUrl);
+        return appDeployUrl;
+
+    }
+
+    /**
+     * 异步生成应用截图并更新封面
+     *
+     * @param appId  应用ID
+     * @param appUrl 应用访问URL
+     */
+    @Override
+    public void generateAppScreenshotAsync(Long appId, String appUrl) {
+        // 使用虚拟线程异步执行
+        Thread.startVirtualThread(() -> {
+            // 调用截图服务生成截图并上传
+            String screenshotUrl = WebScreenshotUtils.saveWebPageScreenshot(appUrl);
+            // 更新应用封面字段
+            App updateApp = new App();
+            updateApp.setId(appId);
+            updateApp.setCover(screenshotUrl);
+            boolean updated = this.updateById(updateApp);
+            ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新应用封面字段失败");
+        });
     }
 
     @Override
@@ -221,7 +247,6 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     /**
      * 删除应用时关联删除对话历史
-     * TODO: 同时删除生成的代码文件
      *
      * @param id 应用ID
      * @return 是否成功
@@ -236,12 +261,22 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         if (appId <= 0) {
             return false;
         }
+        App app = this.getById(appId);
+        if (app == null) {
+            return false;
+        }
         // 先删除关联的对话历史
         try {
             chatHistoryService.deleteByAppId(appId);
         } catch (Exception e) {
             // 记录日志但不阻止应用删除
             log.error("删除应用关联对话历史失败: {}", e.getMessage());
+        }
+        // 删除生成的代码文件，封面图
+        FileUtil.del(AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + app.getCodeGenType() + "_" + appId);
+        if (StrUtil.isNotBlank(app.getDeployKey())) {
+            FileUtil.del(AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + app.getDeployKey());
+            FileUtil.del(AppConstant.COVER_IMAGE_DIR + File.separator + app.getCover());
         }
         // 删除应用
         return super.removeById(id);
