@@ -11,7 +11,7 @@ import lombok.Data;
 @Configuration
 @ConfigurationProperties(prefix = "langchain4j.open-ai.chat-model")
 @Data
-public class ReasoningStreamingChatModelConfig {
+public class ChatModelConfig {
 
     private String baseUrl;
 
@@ -23,7 +23,7 @@ public class ReasoningStreamingChatModelConfig {
     @Bean
     public StreamingChatModel reasoningStreamingChatModel() {
         // 为了测试方便临时修改
-        final String modelName = "llama-4-maverick-17b-128e-instruct";
+        final String modelName = "deepseek-v3";
         final int maxTokens = 8192;
         // 生产环境使用：
         // final String modelName = "llama-4-maverick-17b-128e-instruct";

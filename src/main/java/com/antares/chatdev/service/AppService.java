@@ -2,6 +2,7 @@ package com.antares.chatdev.service;
 
 import java.util.List;
 
+import com.antares.chatdev.model.dto.app.AppAddRequest;
 import com.antares.chatdev.model.dto.app.AppQueryRequest;
 import com.antares.chatdev.model.entity.App;
 import com.antares.chatdev.model.entity.User;
@@ -53,5 +54,7 @@ public interface AppService extends IService<App> {
      * @param appUrl 应用访问URL
      */
     void generateAppScreenshotAsync(Long appId, String appUrl);
+
+    Long createApp(AppAddRequest appAddRequest, User loginUser);
 
 }

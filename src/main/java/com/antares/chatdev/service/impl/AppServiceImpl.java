@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.antares.chatdev.ai.service.AiCodeGenTypeRoutingService;
 import com.antares.chatdev.constant.AppConstant;
 import com.antares.chatdev.core.AiCodeGeneratorFacade;
 import com.antares.chatdev.core.builder.VueProjectBuilder;
@@ -19,6 +20,7 @@ import com.antares.chatdev.exception.BusinessException;
 import com.antares.chatdev.exception.ErrorCode;
 import com.antares.chatdev.exception.ThrowUtils;
 import com.antares.chatdev.mapper.AppMapper;
+import com.antares.chatdev.model.dto.app.AppAddRequest;
 import com.antares.chatdev.model.dto.app.AppQueryRequest;
 import com.antares.chatdev.model.entity.App;
 import com.antares.chatdev.model.entity.User;
@@ -61,6 +63,29 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     private StreamHandlerExecutor streamHandlerExecutor;
     @Resource
     private VueProjectBuilder vueProjectBuilder;
+    @Resource
+    private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+
+    @Override
+    public Long createApp(AppAddRequest appAddRequest, User loginUser) {
+        // 参数校验
+        String initPrompt = appAddRequest.getInitPrompt();
+        ThrowUtils.throwIf(StrUtil.isBlank(initPrompt), ErrorCode.PARAMS_ERROR, "初始化 prompt 不能为空");
+        // 构造入库对象
+        App app = new App();
+        BeanUtil.copyProperties(appAddRequest, app);
+        app.setUserId(loginUser.getId());
+        // 应用名称暂时为 initPrompt 前 12 位
+        app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
+        // 使用 AI 智能选择代码生成类型
+        CodeGenTypeEnum selectedCodeGenType = aiCodeGenTypeRoutingService.routeCodeGenType(initPrompt);
+        app.setCodeGenType(selectedCodeGenType.getValue());
+        // 插入数据库
+        boolean result = this.save(app);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        log.info("应用创建成功，ID: {}, 类型: {}", app.getId(), selectedCodeGenType.getValue());
+        return app.getId();
+    }
 
     @Override
     public Flux<String> chatToGenCode(Long appId, String message, User loginUser) {
@@ -69,10 +94,6 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户消息不能为空");
         // 2. 查询应用信息
         App app = this.getById(appId);
-
-        // TODO 暂时设置为 VUE 工程生成
-        app.setCodeGenType(CodeGenTypeEnum.VUE_PROJECT.getValue());
-
         ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
         // 3. 验证用户是否有权限访问该应用，仅本人可以生成代码
         if (!app.getUserId().equals(loginUser.getId())) {
