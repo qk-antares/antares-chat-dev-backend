@@ -41,7 +41,7 @@ public class ChatMemoryCache implements ChatMemoryProvider {
                     .chatMemoryStore(redisChatMemoryStore)
                     .maxMessages(20)
                     .build();
-            chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 0);
+            chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);
             return chatMemory;
         });
     }

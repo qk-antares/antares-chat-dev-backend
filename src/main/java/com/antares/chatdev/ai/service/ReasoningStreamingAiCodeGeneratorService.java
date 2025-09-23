@@ -7,7 +7,8 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
-@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, streamingChatModel = "reasoningStreamingChatModel", chatMemoryProvider = "chatMemoryCache", tools={"fileWriteTool"})
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, streamingChatModel = "reasoningStreamingChatModel", chatMemoryProvider = "chatMemoryCache", tools = {
+        "fileWriteTool", "fileReadTool", "fileModifyTool", "fileDirReadTool", "fileDeleteTool" })
 public interface ReasoningStreamingAiCodeGeneratorService {
     /**
      * 生成 Vue 项目代码（流式）
