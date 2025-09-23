@@ -110,11 +110,11 @@
             <artifactId>spring-session-data-redis</artifactId>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/io.minio/minio -->
+        <!-- LangGraph4j -->
         <dependency>
-            <groupId>io.minio</groupId>
-            <artifactId>minio</artifactId>
-            <version>8.5.13</version>
+            <groupId>org.bsc.langgraph4j</groupId>
+            <artifactId>langgraph4j-core</artifactId>
+            <version>1.6.0-rc2</version>
         </dependency>
     </dependencies>
 
