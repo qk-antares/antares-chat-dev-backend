@@ -8,6 +8,7 @@ import java.util.Map;
 import org.bsc.langgraph4j.prebuilt.MessagesState;
 
 import com.antares.chatdev.langgraph4j.model.ImageResource;
+import com.antares.chatdev.langgraph4j.model.QualityResult;
 import com.antares.chatdev.model.enums.CodeGenTypeEnum;
 
 import lombok.AllArgsConstructor;
@@ -68,6 +69,11 @@ public class WorkflowContext implements Serializable {
      * 构建成功的目录
      */
     private String buildResultDir;
+
+    /**
+     * 代码质量检查结果
+     */
+    private QualityResult qualityResult;
 
     /**
      * 错误信息
