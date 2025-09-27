@@ -1,68 +1,76 @@
 package com.antares.chatdev.utils;
 
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 
 import com.antares.chatdev.constant.AppConstant;
-import com.antares.chatdev.exception.BusinessException;
-import com.antares.chatdev.exception.ErrorCode;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.img.ImgUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WebScreenshotUtils {
-    public static int DEFAULT_WIDTH = 1280;
-    public static int DEFAULT_HEIGHT = 720;
-    public static String imageFormat = "webp";
-
     /**
      * 生成网页截图
      *
      * @param webUrl 网页URL
      * @return 压缩后的截图文件路径，失败返回null
      */
-    public static String saveWebPageScreenshot(String webUrl) {
+    public static boolean saveWebPageScreenshot(String webUrl, String imageSavePath) {
         if (StrUtil.isBlank(webUrl)) {
             log.error("网页URL不能为空");
-            return null;
+            return false;
         }
         try {
-            String imageFileName = RandomUtil.randomString(6) + "." + imageFormat;
-            // 原始截图文件路径
-            String imageSavePath = AppConstant.COVER_IMAGE_DIR + File.separator + imageFileName;
+
             // 构造 API 请求 URL
             String apiUrl = StrUtil.format(
-                "https://screenshotsnap.com/api/screenshot?url={}&format={}&width={}&height={}",
-                webUrl, imageFormat, DEFAULT_WIDTH, DEFAULT_HEIGHT
-            );
+                    "https://screenshotsnap.com/api/screenshot?url={}&format={}&width={}&height={}",
+                    webUrl, AppConstant.IMAGE_FORMAT, AppConstant.DEFAULT_WIDTH, AppConstant.DEFAULT_HEIGHT);
             // 发起 HTTP 请求获取图片
             byte[] imageBytes = HttpUtil.downloadBytes(apiUrl);
-            if (imageBytes == null || imageBytes.length == 0) {
+            if (imageBytes == null || imageBytes.length < 2048) {
                 log.error("截图 API 返回空数据: {}", apiUrl);
-                return null;
+                return false;
             }
-            // 保存图片
-            saveImage(imageBytes, imageSavePath);
-            log.info("原始截图保存成功: {}", imageSavePath);
-            return imageFileName;
+
+            // 读取为 BufferedImage
+            BufferedImage original = ImgUtil.read(new ByteArrayInputStream(imageBytes));
+            if (original == null) {
+                log.error("无法解析图片数据");
+                return false;
+            }
+
+            // 裁剪区域：左上角 (0,0)，宽度减去右侧 20px，高度减去底部 20px
+            Rectangle rect = new Rectangle(
+                    0,
+                    0,
+                    AppConstant.DEFAULT_WIDTH - AppConstant.CROP_WIDTH,
+                    AppConstant.DEFAULT_HEIGHT - AppConstant.CROP_WIDTH
+            );
+
+            // 执行裁剪并保存
+            File destFile = new File(imageSavePath);
+            ImgUtil.cut(original, destFile, rect);
+
+            log.info("截图保存成功: {}", imageSavePath);
+            return true;
         } catch (Exception e) {
             log.error("网页截图失败: {}", webUrl, e);
-            return null;
+            return false;
         }
     }
 
-    /**
-     * 保存图片到文件
-     */
-    private static void saveImage(byte[] imageBytes, String imagePath) {
-        try {
-            FileUtil.writeBytes(imageBytes, imagePath);
-        } catch (Exception e) {
-            log.error("保存图片失败: {}", imagePath, e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "保存图片失败");
-        }
+    public static void main(String[] args) {
+        String destPath = "/root/workplace/java/antares-chat-dev-backend/tmp/screenshots/EwmFAx_cropped.webp";
+
+        String testUrl = "https://chatdev.fffu.fun:44480/demo/EwmFAx/";
+        boolean success = saveWebPageScreenshot(testUrl, destPath);
+        System.out.println("截图成功: " + success);
     }
+
 }

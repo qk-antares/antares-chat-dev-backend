@@ -5,6 +5,7 @@ import java.io.Serializable;
 import com.antares.chatdev.exception.ErrorCode;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 通过响应类
@@ -12,6 +13,7 @@ import lombok.Data;
  * @param <T>
  */
 @Data
+@NoArgsConstructor
 public class BaseResponse<T> implements Serializable {
 
     private int code;

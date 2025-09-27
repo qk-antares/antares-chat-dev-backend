@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.antares.chatdev.ai.service.AiCodeGenTypeRoutingService;
@@ -37,6 +38,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -65,6 +67,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     private VueProjectBuilder vueProjectBuilder;
     @Resource
     private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+    @Value("${antares.deploy-host}")
+    private String deployHost;
 
     @Override
     public Long createApp(AppAddRequest appAddRequest, User loginUser) {
@@ -173,9 +177,13 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         boolean updateResult = this.updateById(updateApp);
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新应用部署信息失败");
         // 10. 构建应用访问 URL
-        String appDeployUrl = String.format("%s/%s/", AppConstant.CODE_DEPLOY_HOST, deployKey);
-        // 11. 异步生成截图并更新应用封面
-        generateAppScreenshotAsync(appId, appDeployUrl);
+        String appDeployUrl = String.format("%s/%s/", deployHost, deployKey);
+        // 11. 删除旧的封面图
+        if (StrUtil.isNotBlank(app.getCover())) {
+            FileUtil.del(AppConstant.COVER_IMAGE_DIR + File.separator + app.getCover());
+        }
+        // 12. 异步生成截图并更新应用封面
+        generateAppScreenshotAsync(appId, deployKey, appDeployUrl);
         return appDeployUrl;
 
     }
@@ -187,15 +195,24 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
      * @param appUrl 应用访问URL
      */
     @Override
-    public void generateAppScreenshotAsync(Long appId, String appUrl) {
+    public void generateAppScreenshotAsync(Long appId, String deployKey, String appUrl) {
         // 使用虚拟线程异步执行
         Thread.startVirtualThread(() -> {
+            // 拼接时间字符串
+            String timeStr = DateUtil.format(DateUtil.date(), "yyyyMMddHHmmss");
             // 调用截图服务生成截图并上传
-            String screenshotUrl = WebScreenshotUtils.saveWebPageScreenshot(appUrl);
+            String imageFileName = deployKey + "_" + timeStr + "." + AppConstant.IMAGE_FORMAT;
+            // 原始截图文件路径
+            String imageSavePath = AppConstant.COVER_IMAGE_DIR + File.separator + imageFileName;
+            boolean success = WebScreenshotUtils.saveWebPageScreenshot(appUrl, imageSavePath);
+            if (!success) {
+                log.error("应用截图生成失败，应用ID: {}, URL: {}", appId, appUrl);
+                return;
+            }
             // 更新应用封面字段
             App updateApp = new App();
             updateApp.setId(appId);
-            updateApp.setCover(screenshotUrl);
+            updateApp.setCover(imageFileName);
             boolean updated = this.updateById(updateApp);
             ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新应用封面字段失败");
         });

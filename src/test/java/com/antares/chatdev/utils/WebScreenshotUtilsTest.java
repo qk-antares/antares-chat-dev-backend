@@ -11,8 +11,8 @@ public class WebScreenshotUtilsTest {
     @Test
     void saveWebPageScreenshot() {
         String testUrl = "https://chatdev-demo.fffu.fun:44480/YICPqQ/";
-        String webPageScreenshot = WebScreenshotUtils.saveWebPageScreenshot(testUrl);
-        Assertions.assertNotNull(webPageScreenshot);
+        boolean success = WebScreenshotUtils.saveWebPageScreenshot(testUrl, "YICPqQ.webp");
+        Assertions.assertTrue(success);
     }
 }
 

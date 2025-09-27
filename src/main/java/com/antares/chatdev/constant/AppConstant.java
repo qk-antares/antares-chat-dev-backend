@@ -27,9 +27,8 @@ public interface AppConstant {
      */
     String COVER_IMAGE_DIR = System.getProperty("user.dir") + "/tmp/screenshots";
 
-    /**
-     * 应用部署域名
-     */
-    String CODE_DEPLOY_HOST = "https://chatdev.fffu.fun:44480/demo";
-
+    int DEFAULT_WIDTH = 1296;
+    int CROP_WIDTH = 16;
+    int DEFAULT_HEIGHT = 736;
+    String IMAGE_FORMAT = "webp";
 }

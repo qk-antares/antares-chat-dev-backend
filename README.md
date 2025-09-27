@@ -225,8 +225,20 @@ Flux 是 Spring WebFlux 提供的响应式流（reactive stream）类型，可�
 它的作用是：在 switch 表达式的某个分支内，将一个值“产出”给整个 switch 表达式。
 这样 switch 语句就可以像三元表达式一样有返回值，yield 后面跟的就是这个分支的结果。
 
+### Redis
 
-# 1. 用户登录
+#### 旁路缓存模式
+
+- 查询时先检查缓存，命中则直接返回
+- 缓存未命中则查询数据库，并将结果写入缓存
+- 设置合理的过期时间（根据数据的更新频率），**无需主动删除缓存**
+
+
+### 测试
+
+1. 用户登录
+
+```
 curl -X POST "http://localhost:8014/api/user/login" \
   -H "Content-Type: application/json" \
   -d '{
@@ -234,8 +246,11 @@ curl -X POST "http://localhost:8014/api/user/login" \
     "userPassword": "12345678"
   }' \
   -c cookies.txt
+```
 
-# 2. 调用生成代码接口（流式）
+2. 调用生成代码接口（流式）
+
+```
 curl -G "http://localhost:8014/api/app/chat/gen/code" \
   --data-urlencode "appId=324296704651251712" \
   --data-urlencode "message=做一个贪吃蛇游戏网站" \
@@ -243,5 +258,7 @@ curl -G "http://localhost:8014/api/app/chat/gen/code" \
   -H "Cache-Control: no-cache" \
   -b cookies.txt \
   --no-buffer
+```
 
 部署服务本质上就是将代码拷贝到nginx代理的一个目录下，从而提供对外访问能力
+

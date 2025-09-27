@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.antares.chatdev.constant.AppConstant;
 import com.antares.chatdev.constant.UserConstant;
 import com.antares.chatdev.exception.ErrorCode;
 import com.antares.chatdev.exception.ThrowUtils;
@@ -53,7 +54,8 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
         ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
         boolean isAdmin = UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole());
         boolean isCreator = app.getUserId().equals(loginUser.getId());
-        ThrowUtils.throwIf(!isAdmin && !isCreator, ErrorCode.NO_AUTH_ERROR, "无权查看该应用的对话历史");
+        boolean isFeatured = app.getPriority() == AppConstant.GOOD_APP_PRIORITY;
+        ThrowUtils.throwIf(!isFeatured && !isAdmin && !isCreator, ErrorCode.NO_AUTH_ERROR, "无权查看该应用的对话历史");
         // 构建查询条件
         ChatHistoryQueryRequest queryRequest = new ChatHistoryQueryRequest();
         queryRequest.setAppId(appId);

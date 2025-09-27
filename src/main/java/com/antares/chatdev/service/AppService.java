@@ -47,14 +47,14 @@ public interface AppService extends IService<App> {
 
     String deployApp(Long appId, User loginUser);
 
+    Long createApp(AppAddRequest appAddRequest, User loginUser);
+
     /**
      * 异步生成应用截图并更新封面
      *
      * @param appId  应用ID
      * @param appUrl 应用访问URL
      */
-    void generateAppScreenshotAsync(Long appId, String appUrl);
-
-    Long createApp(AppAddRequest appAddRequest, User loginUser);
+    void generateAppScreenshotAsync(Long appId, String deployKey, String appUrl);
 
 }
