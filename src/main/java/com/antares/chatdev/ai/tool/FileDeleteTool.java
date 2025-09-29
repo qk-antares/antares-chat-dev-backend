@@ -40,9 +40,9 @@ public class FileDeleteTool extends BaseTool {
     }
 
     @Override
-    public String generateToolExecutedResult(JSONObject arguments) {
+    public String generateToolExecutedMsg(JSONObject arguments) {
         String relativeFilePath = arguments.getStr("relativeFilePath");
-        return String.format("[工具调用] %s %s", getDisplayName(), relativeFilePath);
+        return String.format("[%s] %s", getDisplayName(), relativeFilePath);
     }
 
     @Tool("删除指定路径的文件")

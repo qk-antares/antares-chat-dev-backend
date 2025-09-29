@@ -42,12 +42,12 @@ public class FileWriteTool extends BaseTool {
     }
 
     @Override
-    public String generateToolExecutedResult(JSONObject arguments) {
+    public String generateToolExecutedMsg(JSONObject arguments) {
         String relativeFilePath = arguments.getStr("relativeFilePath");
         String suffix = FileUtil.getSuffix(relativeFilePath);
         String content = arguments.getStr("content");
         return String.format("""
-                        [工具调用] %s %s
+                        [%s] %s
                         ```%s
                         %s
                         ```

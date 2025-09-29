@@ -9,6 +9,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
+import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -44,6 +45,15 @@ public class ChatMemoryCache implements ChatMemoryProvider {
             chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);
             return chatMemory;
         });
+    }
+
+    public boolean addSystemMessage(Long memoryId, String message) {
+        ChatMemory chatMemory = get(memoryId);
+        if (chatMemory != null) {
+            chatMemory.add(SystemMessage.from(message));
+            return true;
+        }
+        return false;
     }
 
 }

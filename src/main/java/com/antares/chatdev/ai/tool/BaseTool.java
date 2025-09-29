@@ -27,7 +27,7 @@ public abstract class BaseTool {
      *
      * @return 工具请求显示内容
      */
-    public String generateToolRequestResponse() {
+    public String generateToolRequestMsg() {
         return String.format("\n\n[选择工具] %s\n\n", getDisplayName());
     }
 
@@ -37,5 +37,5 @@ public abstract class BaseTool {
      * @param arguments 工具执行参数
      * @return 格式化的工具执行结果
      */
-    public abstract String generateToolExecutedResult(JSONObject arguments);
+    public abstract String generateToolExecutedMsg(JSONObject arguments);
 }

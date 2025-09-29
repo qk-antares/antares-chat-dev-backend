@@ -1,9 +1,13 @@
 package com.antares.chatdev.service.impl;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import com.antares.chatdev.constant.AppConstant;
@@ -16,6 +20,7 @@ import com.antares.chatdev.model.entity.App;
 import com.antares.chatdev.model.entity.ChatHistory;
 import com.antares.chatdev.model.entity.User;
 import com.antares.chatdev.model.enums.ChatHistoryMessageTypeEnum;
+import com.antares.chatdev.model.enums.CodeGenTypeEnum;
 import com.antares.chatdev.service.ChatHistoryService;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
@@ -24,6 +29,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import jakarta.annotation.Resource;
@@ -61,6 +67,9 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
         queryRequest.setAppId(appId);
         queryRequest.setLastCreateTime(lastCreateTime);
         QueryWrapper queryWrapper = this.getQueryWrapper(queryRequest);
+        queryWrapper.in(ChatHistory::getMessageType,
+                ChatHistoryMessageTypeEnum.TOOL_CALL_AI.getValue(),
+                ChatHistoryMessageTypeEnum.USER.getValue());
         // 查询数据
         return this.page(Page.of(1, pageSize), queryWrapper);
     }
@@ -69,21 +78,29 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
     public int loadChatHistoryToMemory(Long appId, ChatMemory chatMemory, int maxCount) {
         try {
             // 直接构造查询条件，起始点为 1 而不是 0，用于排除最新的用户消息
+            // 查询的记录数是maxCount - 2，扣除第一条的SystemMessage以及最新的一条用户消息（确保最新的一条消息来了之后不会超过maxCount）
             QueryWrapper queryWrapper = QueryWrapper.create()
                     .eq(ChatHistory::getAppId, appId)
+                    .in(ChatHistory::getMessageType,
+                            ChatHistoryMessageTypeEnum.AI,
+                            ChatHistoryMessageTypeEnum.USER)
                     .orderBy(ChatHistory::getCreateTime, false)
-                    .limit(1, maxCount);
+                    .limit(1, maxCount - 2);
             List<ChatHistory> historyList = this.list(queryWrapper);
             if (CollUtil.isEmpty(historyList)) {
                 return 0;
             }
             // 反转列表，确保按时间正序（老的在前，新的在后）
-            historyList.reversed();
-            
-            // 按时间顺序添加到记忆中
-            int loadedCount = 0;
+            Collections.reverse(historyList);
+
             // 先清理历史缓存，防止重复加载
             chatMemory.clear();
+            // 必须首先加载系统消息
+            App app = appService.getById(appId);
+            chatMemory.add(SystemMessage.from(readPrompt(CodeGenTypeEnum.getEnumByValue(app.getCodeGenType()))));
+
+            // 按时间顺序添加到记忆中
+            int loadedCount = 1;
             for (ChatHistory history : historyList) {
                 if (ChatHistoryMessageTypeEnum.USER.getValue().equals(history.getMessageType())) {
                     chatMemory.add(UserMessage.from(history.getMessage()));
@@ -168,4 +185,12 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
         return this.remove(queryWrapper);
     }
 
+    public static String readPrompt(CodeGenTypeEnum codeGenTypeEnum) {
+        String fileName = CodeGenTypeEnum.getPromptFileName(codeGenTypeEnum);
+        try (InputStream is = new ClassPathResource("prompt/" + fileName).getInputStream()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("读取prompt文件失败: " + fileName, e);
+        }
+    }
 }

@@ -38,4 +38,36 @@ public enum CodeGenTypeEnum {
         }
         return null;
     }
+
+    public static String getPromptFileName(CodeGenTypeEnum codeGenTypeEnum) {
+        if (codeGenTypeEnum == null) {
+            return null;
+        }
+        switch (codeGenTypeEnum) {
+            case HTML:
+                return "codegen-html-system-prompt.txt";
+            case MULTI_FILE:
+                return "codegen-multi-file-system-prompt.txt";
+            case VUE_PROJECT:
+                return "codegen-vue-project-system-prompt.txt";
+            default:
+                return null;
+        }
+    }
+
+    public static String getEnhancePromptFileName(CodeGenTypeEnum codeGenTypeEnum) {
+        if (codeGenTypeEnum == null) {
+            return null;
+        }
+        switch (codeGenTypeEnum) {
+            case HTML:
+                return "codegen-html-enhance-prompt.txt";
+            case MULTI_FILE:
+                return "codegen-multi-file-enhance-prompt.txt";
+            case VUE_PROJECT:
+                return "codegen-vue-project-enhance-prompt.txt";
+            default:
+                return null;
+        }
+    }
 }

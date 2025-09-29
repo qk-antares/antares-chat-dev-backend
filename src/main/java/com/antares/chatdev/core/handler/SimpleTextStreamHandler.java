@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import com.antares.chatdev.model.enums.ChatHistoryMessageTypeEnum;
 import com.antares.chatdev.service.ChatHistoryService;
 
-import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
@@ -39,13 +38,13 @@ public class SimpleTextStreamHandler {
         }).doOnComplete(() -> {
             // 流式响应完成后，添加AI消息到对话历史
             String aiResponse = aiResponseBuilder.toString();
-            if (StrUtil.isNotBlank(aiResponse)) {
-                chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), userId);
-            }
+            chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), userId);
+            chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.TOOL_CALL_AI.getValue(), userId);
         }).doOnError(error -> {
             // AI回复失败，记录错误信息
             String errorMessage = "AI回复失败：" + error.getMessage();
             chatHistoryService.addChatMessage(appId, errorMessage, ChatHistoryMessageTypeEnum.AI.getValue(), userId);
+            chatHistoryService.addChatMessage(appId, errorMessage, ChatHistoryMessageTypeEnum.TOOL_CALL_AI.getValue(), userId);
         });
     }
 }

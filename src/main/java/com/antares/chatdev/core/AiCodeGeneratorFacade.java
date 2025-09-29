@@ -12,6 +12,8 @@ import com.antares.chatdev.ai.model.message.ToolRequestMessage;
 import com.antares.chatdev.ai.service.AiCodeGeneratorService;
 import com.antares.chatdev.ai.service.ReasoningStreamingAiCodeGeneratorService;
 import com.antares.chatdev.ai.service.StreamingAiCodeGeneratorService;
+import com.antares.chatdev.constant.AppConstant;
+import com.antares.chatdev.core.builder.VueProjectBuilder;
 import com.antares.chatdev.core.parser.CodeParserExecutor;
 import com.antares.chatdev.core.saver.CodeFileSaverExecutor;
 import com.antares.chatdev.exception.BusinessException;
@@ -39,6 +41,8 @@ public class AiCodeGeneratorFacade {
     private StreamingAiCodeGeneratorService streamingAiCodeGeneratorService;
     @Resource
     private ReasoningStreamingAiCodeGeneratorService reasoningStreamingAiCodeGeneratorService;
+    @Resource
+    private VueProjectBuilder vueProjectBuilder;
 
     /**
      * 统一入口：根据类型生成并保存代码
@@ -91,7 +95,7 @@ public class AiCodeGeneratorFacade {
             case VUE_PROJECT -> {
                 TokenStream tokenStream = reasoningStreamingAiCodeGeneratorService.generateVueProjectCodeStream(appId,
                         userMessage);
-                yield processTokenStream(tokenStream);
+                yield processTokenStream(tokenStream, appId);
             }
             default -> {
                 String errorMessage = "不支持的生成类型：" + codeGenTypeEnum.getValue();
@@ -129,12 +133,12 @@ public class AiCodeGeneratorFacade {
     }
 
     /**
-     * 将 TokenStream 转换为 Flux<String>，并传递工具调用信息
+     * 将 TokenStream 转换为 Flux<String>，并传递工具调用信息（给Vue项目使用）
      *
      * @param tokenStream TokenStream 对象
      * @return Flux<String> 流式响应
      */
-    private Flux<String> processTokenStream(TokenStream tokenStream) {
+    private Flux<String> processTokenStream(TokenStream tokenStream, Long appId) {
         return Flux.create(sink -> {
             tokenStream
                     .onPartialResponse((String partialResponse) -> {
@@ -150,6 +154,10 @@ public class AiCodeGeneratorFacade {
                         sink.next(JSONUtil.toJsonStr(toolExecutedMessage));
                     })
                     .onCompleteResponse((ChatResponse response) -> {
+                        // 执行Vue项目构建（同步执行，确保预览时项目已就绪）
+                        String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator
+                                + CodeGenTypeEnum.VUE_PROJECT.getValue() + "_" + appId;
+                        vueProjectBuilder.buildProject(projectPath);
                         sink.complete();
                     })
                     .onError((Throwable error) -> {

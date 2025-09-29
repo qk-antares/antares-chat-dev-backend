@@ -1,7 +1,9 @@
 package com.antares.chatdev.service.impl;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import com.antares.chatdev.ai.service.AiCodeGenTypeRoutingService;
@@ -38,7 +41,6 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -113,11 +115,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // 5. 添加用户消息到对话历史
         chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(),
                 loginUser.getId());
+
         // 6. 调用 AI 生成代码
         Flux<String> contentFlux = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
         // 7. 收集AI响应内容并在完成后记录到对话历史，对于Vue项目类型还要异步构建项目
         return streamHandlerExecutor.doExecute(contentFlux, appId, loginUser.getId(), codeGenTypeEnum);
-
+        
     }
 
     @Override
@@ -132,23 +135,17 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         if (!app.getUserId().equals(loginUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限部署该应用");
         }
-        // 4. 检查是否已有 deployKey
-        String deployKey = app.getDeployKey();
-        // 没有则生成 6 位 deployKey（大小写字母 + 数字）
-        if (StrUtil.isBlank(deployKey)) {
-            deployKey = RandomUtil.randomString(6);
-        }
-        // 5. 获取代码生成类型，构建源目录路径
+        // 4. 获取代码生成类型，构建源目录路径
         String codeGenType = app.getCodeGenType();
         String sourceDirName = codeGenType + "_" + appId;
         String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName;
-        // 6. 检查源目录是否存在
+        // 5. 检查源目录是否存在
         File sourceDir = new File(sourceDirPath);
         if (!sourceDir.exists() || !sourceDir.isDirectory()) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "应用代码不存在，请先生成代码");
         }
 
-        // 7. Vue项目首先执行构建
+        // 6. Vue项目首先执行构建
         CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByValue(codeGenType);
         if (codeGenTypeEnum == CodeGenTypeEnum.VUE_PROJECT) {
             // Vue 项目需要构建
@@ -162,8 +159,15 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
             log.info("Vue 项目构建成功，将部署 dist 目录: {}", distDir.getAbsolutePath());
         }
 
-        // 8. 复制文件到部署目录
-        String deployDirPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + deployKey;
+        // 7. 检查是否已有 deployKey，删除旧的部署目录
+        String oldDeployKey = app.getDeployKey();
+        if (StrUtil.isNotBlank(oldDeployKey)) {
+            FileUtil.del(AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + oldDeployKey);
+        }
+
+        // 8. 生成新的 deployKey，复制文件到部署目录
+        String newDeployKey = RandomUtil.randomString(6);
+        String deployDirPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + newDeployKey;
         try {
             FileUtil.copyContent(sourceDir, new File(deployDirPath), true);
         } catch (Exception e) {
@@ -172,18 +176,15 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // 9. 更新应用的 deployKey 和部署时间
         App updateApp = new App();
         updateApp.setId(appId);
-        updateApp.setDeployKey(deployKey);
+        updateApp.setDeployKey(newDeployKey);
         updateApp.setDeployedTime(LocalDateTime.now());
         boolean updateResult = this.updateById(updateApp);
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新应用部署信息失败");
         // 10. 构建应用访问 URL
-        String appDeployUrl = String.format("%s/%s/", deployHost, deployKey);
-        // 11. 删除旧的封面图
-        if (StrUtil.isNotBlank(app.getCover())) {
-            FileUtil.del(AppConstant.COVER_IMAGE_DIR + File.separator + app.getCover());
-        }
-        // 12. 异步生成截图并更新应用封面
-        generateAppScreenshotAsync(appId, deployKey, appDeployUrl);
+        String appDeployUrl = String.format("%s/%s/", deployHost, newDeployKey);
+
+        // 11. 异步生成截图并更新应用封面
+        generateAppScreenshotAsync(appId, oldDeployKey, newDeployKey, appDeployUrl);
         return appDeployUrl;
 
     }
@@ -195,13 +196,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
      * @param appUrl 应用访问URL
      */
     @Override
-    public void generateAppScreenshotAsync(Long appId, String deployKey, String appUrl) {
+    public void generateAppScreenshotAsync(Long appId, String oldDeployKey, String newDeployKey, String appUrl) {
         // 使用虚拟线程异步执行
         Thread.startVirtualThread(() -> {
-            // 拼接时间字符串
-            String timeStr = DateUtil.format(DateUtil.date(), "yyyyMMddHHmmss");
             // 调用截图服务生成截图并上传
-            String imageFileName = deployKey + "_" + timeStr + "." + AppConstant.IMAGE_FORMAT;
+            String imageFileName = newDeployKey + "." + AppConstant.IMAGE_FORMAT;
             // 原始截图文件路径
             String imageSavePath = AppConstant.COVER_IMAGE_DIR + File.separator + imageFileName;
             boolean success = WebScreenshotUtils.saveWebPageScreenshot(appUrl, imageSavePath);
@@ -209,12 +208,18 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
                 log.error("应用截图生成失败，应用ID: {}, URL: {}", appId, appUrl);
                 return;
             }
+
             // 更新应用封面字段
             App updateApp = new App();
             updateApp.setId(appId);
             updateApp.setCover(imageFileName);
             boolean updated = this.updateById(updateApp);
             ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新应用封面字段失败");
+
+            // 删除旧的封面图
+            if (StrUtil.isNotBlank(oldDeployKey)) {
+                FileUtil.del(AppConstant.COVER_IMAGE_DIR + File.separator + oldDeployKey + "." + AppConstant.IMAGE_FORMAT);
+            }
         });
     }
 
@@ -320,4 +325,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         return super.removeById(id);
     }
 
+    public static String readEnhancePrompt(CodeGenTypeEnum codeGenTypeEnum) {
+        String fileName = CodeGenTypeEnum.getEnhancePromptFileName(codeGenTypeEnum);
+        try (InputStream is = new ClassPathResource("prompt/" + fileName).getInputStream()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("读取prompt文件失败: " + fileName, e);
+        }
+    }
 }
