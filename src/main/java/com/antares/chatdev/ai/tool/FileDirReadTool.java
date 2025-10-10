@@ -29,9 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class FileDirReadTool extends BaseTool {
-    
-    // 核心方法不变，此处省略
-
     @Override
     public String getToolName() {
         return "readDir";
@@ -48,7 +45,7 @@ public class FileDirReadTool extends BaseTool {
         if (StrUtil.isEmpty(relativeDirPath)) {
             relativeDirPath = "根目录";
         }
-        return String.format("[%s] %s", getDisplayName(), relativeDirPath);
+        return String.format("[工具调用] %s %s", getDisplayName(), relativeDirPath);
     }
 
     /**

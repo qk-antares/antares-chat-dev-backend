@@ -9,7 +9,7 @@ import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import lombok.Data;
 
 @Configuration
-@ConfigurationProperties(prefix = "langchain4j.open-ai.chat-model")
+@ConfigurationProperties(prefix = "langchain4j.open-ai.reasoning-streaming-chat-model")
 @Data
 public class ChatModelConfig {
 
@@ -17,25 +17,26 @@ public class ChatModelConfig {
 
     private String apiKey;
 
+    private String modelName;
+
+    private int maxTokens;
+
+    private boolean logRequests;
+
+    private boolean logResponses;
+
     /**
      * 推理流式模型（用于 Vue 项目生成，带工具调用）
      */
     @Bean
     public StreamingChatModel reasoningStreamingChatModel() {
-        // 为了测试方便临时修改
-        // final String modelName = "deepseek-r1";
-        final String modelName = "deepseek-v3";
-        final int maxTokens = 32768;
-        // 生产环境使用：
-        // final String modelName = "llama-4-maverick-17b-128e-instruct";
-        // final int maxTokens = 32768;
         return OpenAiStreamingChatModel.builder()
                 .apiKey(apiKey)
                 .baseUrl(baseUrl)
                 .modelName(modelName)
                 .maxTokens(maxTokens)
-                .logRequests(true)
-                .logResponses(true)
+                .logRequests(logRequests)
+                .logResponses(logResponses)
                 .build();
     }
 }

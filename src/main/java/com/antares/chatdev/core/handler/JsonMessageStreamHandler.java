@@ -88,7 +88,6 @@ public class JsonMessageStreamHandler {
                             BaseTool tool = toolManager.getTool(toolName);
                             String toolRes = tool.generateToolExecutedMsg(jsonObject);
                             toolCallAiHistoryStringBuilder.append(toolRes);
-                            aiHistoryStringBuilder.append(toolRes);
                             return toolRes;
                         }
                         default -> {

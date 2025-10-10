@@ -9,6 +9,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
+import com.antares.chatdev.ai.memory.SelectiveWindowChatMemoryStore;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -37,11 +38,13 @@ public class ChatMemoryCache implements ChatMemoryProvider {
     public ChatMemory get(Object memoryId) {
         return memoryCache.get((Long) memoryId, appId -> {
             log.debug("为appId-{}创建新的ChatMemory实例", appId);
-            ChatMemory chatMemory = MessageWindowChatMemory.builder()
-                    .id(appId)
-                    .chatMemoryStore(redisChatMemoryStore)
-                    .maxMessages(20)
-                    .build();
+        ChatMemory chatMemory = MessageWindowChatMemory.builder()
+            .id(appId)
+            // 使用自定义窗口策略：核心消息限制 20，工具消息不计数（内部在 getMessages 时裁剪）
+            .chatMemoryStore(new SelectiveWindowChatMemoryStore(redisChatMemoryStore, 20))
+            // 这里给一个较大的 maxMessages，避免框架内部再次裁剪（我们自己控制）
+            .maxMessages(10000)
+            .build();
             chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);
             return chatMemory;
         });
