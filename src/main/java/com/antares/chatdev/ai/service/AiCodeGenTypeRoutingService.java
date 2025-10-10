@@ -12,7 +12,6 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
  */
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "openAiChatModel")
 public interface AiCodeGenTypeRoutingService {
-
     /**
      * 根据用户需求智能选择代码生成类型
      *

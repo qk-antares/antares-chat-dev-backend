@@ -1,4 +1,4 @@
-package com.antares.chatdev.ai;
+package com.antares.chatdev.ai.service;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;

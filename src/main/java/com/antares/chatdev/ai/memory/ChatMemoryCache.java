@@ -1,4 +1,4 @@
-package com.antares.chatdev.ai;
+package com.antares.chatdev.ai.memory;
 
 import java.time.Duration;
 
@@ -9,7 +9,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
-import com.antares.chatdev.ai.memory.SelectiveWindowChatMemoryStore;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;

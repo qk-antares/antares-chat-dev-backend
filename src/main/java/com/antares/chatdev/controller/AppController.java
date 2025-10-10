@@ -34,6 +34,8 @@ import com.antares.chatdev.model.dto.app.AppUpdateRequest;
 import com.antares.chatdev.model.entity.App;
 import com.antares.chatdev.model.entity.User;
 import com.antares.chatdev.model.vo.AppVO;
+import com.antares.chatdev.ratelimiter.annotation.RateLimit;
+import com.antares.chatdev.ratelimiter.enums.RateLimitType;
 import com.antares.chatdev.service.AppService;
 import com.antares.chatdev.service.ProjectDownloadService;
 import com.antares.chatdev.service.UserService;
@@ -79,6 +81,7 @@ public class AppController {
      * @return 生成结果流
      */
     @GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @RateLimit(limitType = RateLimitType.USER, rate = 5, rateInterval = 60, message = "AI 对话请求过于频繁，请稍后再试")
     public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
             @RequestParam String message,
             HttpServletRequest request) {
