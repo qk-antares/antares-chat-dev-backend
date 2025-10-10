@@ -1,4 +1,4 @@
-package com.antares.chatdev.ratelimiter.enums;
+package com.antares.chatdev.model.enums;
 
 public enum RateLimitType {
     

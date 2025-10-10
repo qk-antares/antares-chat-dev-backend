@@ -1,11 +1,11 @@
-package com.antares.chatdev.ratelimiter.annotation;
+package com.antares.chatdev.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.antares.chatdev.ratelimiter.enums.RateLimitType;
+import com.antares.chatdev.model.enums.RateLimitType;
 
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

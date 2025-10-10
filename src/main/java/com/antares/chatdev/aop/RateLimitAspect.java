@@ -1,4 +1,4 @@
-package com.antares.chatdev.ratelimiter.aspect;
+package com.antares.chatdev.aop;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.antares.chatdev.annotation.RateLimit;
 import com.antares.chatdev.exception.BusinessException;
 import com.antares.chatdev.exception.ErrorCode;
 import com.antares.chatdev.model.entity.User;
-import com.antares.chatdev.ratelimiter.annotation.RateLimit;
 import com.antares.chatdev.service.UserService;
 
 import jakarta.annotation.Resource;

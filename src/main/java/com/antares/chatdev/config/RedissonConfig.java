@@ -1,4 +1,4 @@
-package com.antares.chatdev.ratelimiter.config;
+package com.antares.chatdev.config;
 
 import java.time.Duration;
 

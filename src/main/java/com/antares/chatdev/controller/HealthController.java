@@ -4,10 +4,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.antares.chatdev.annotation.RateLimit;
 import com.antares.chatdev.common.BaseResponse;
 import com.antares.chatdev.common.ResultUtils;
-import com.antares.chatdev.ratelimiter.annotation.RateLimit;
-import com.antares.chatdev.ratelimiter.enums.RateLimitType;
+import com.antares.chatdev.model.enums.RateLimitType;
 
 @RestController
 @RequestMapping("/health")

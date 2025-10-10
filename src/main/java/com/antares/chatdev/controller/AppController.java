@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.antares.chatdev.annotation.AuthCheck;
+import com.antares.chatdev.annotation.RateLimit;
 import com.antares.chatdev.common.BaseResponse;
 import com.antares.chatdev.common.DeleteRequest;
 import com.antares.chatdev.common.ResultUtils;
@@ -33,9 +34,8 @@ import com.antares.chatdev.model.dto.app.AppUpdateAdminRequest;
 import com.antares.chatdev.model.dto.app.AppUpdateRequest;
 import com.antares.chatdev.model.entity.App;
 import com.antares.chatdev.model.entity.User;
+import com.antares.chatdev.model.enums.RateLimitType;
 import com.antares.chatdev.model.vo.AppVO;
-import com.antares.chatdev.ratelimiter.annotation.RateLimit;
-import com.antares.chatdev.ratelimiter.enums.RateLimitType;
 import com.antares.chatdev.service.AppService;
 import com.antares.chatdev.service.ProjectDownloadService;
 import com.antares.chatdev.service.UserService;

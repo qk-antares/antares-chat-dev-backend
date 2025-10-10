@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Aspect
 @Component
-public class AuthInterceptor {
+public class AuthCheckAspect {
 
     @Resource
     private UserService userService;
