@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public BaseResponse<?> businessExceptionHandler(BusinessException e) {
         // BussinessException是可以预期的业务异常，不需要打印堆栈信息
-        log.error("BusinessException", e.getMessage());
+        log.error("BusinessException: {}", e.getMessage());
         // 尝试处理SSE请求
         if (handleSseError(e.getCode(), e.getMessage())) {
             return null;
@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public BaseResponse<?> runtimeExceptionHandler(RuntimeException e) {
-        log.error("RuntimeException", e);
+        log.error("RuntimeException: {}", e);
         // 尝试处理SSE请求
         if (handleSseError(ErrorCode.SYSTEM_ERROR.getCode(), "系统错误")) {
             return null;

@@ -14,6 +14,7 @@ import com.antares.chatdev.annotation.AuthCheck;
 import com.antares.chatdev.common.BaseResponse;
 import com.antares.chatdev.common.ResultUtils;
 import com.antares.chatdev.constant.UserConstant;
+import com.antares.chatdev.exception.BusinessException;
 import com.antares.chatdev.exception.ErrorCode;
 import com.antares.chatdev.exception.ThrowUtils;
 import com.antares.chatdev.model.dto.chathistory.ChatHistoryQueryRequest;
@@ -26,6 +27,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 对话历史 控制层。
@@ -35,6 +37,7 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/chatHistory")
+@Slf4j
 public class ChatHistoryController {
     @Resource
     private ChatHistoryService chatHistoryService;
@@ -55,7 +58,12 @@ public class ChatHistoryController {
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) LocalDateTime lastCreateTime,
             HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = null;
+        try {
+            loginUser = userService.getLoginUser(request);
+        } catch (BusinessException e) {
+            log.info("匿名用户查看对话历史");
+        }
         Page<ChatHistory> result = chatHistoryService.listAppChatHistoryByPage(appId, pageSize, lastCreateTime,
                 loginUser);
         return ResultUtils.success(result);
