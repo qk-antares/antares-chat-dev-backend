@@ -13,19 +13,25 @@ public interface AppConstant {
     Integer DEFAULT_APP_PRIORITY = 0;
 
     /**
+     * 后端项目的home目录
+     */
+    // String PROJECT_HOME = System.getProperty("user.dir");
+    String PROJECT_HOME = "/software/app/backend/antares-chat-dev-backend";
+
+    /**
      * 应用生成目录
      */
-    String CODE_OUTPUT_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
+    String CODE_OUTPUT_ROOT_DIR = PROJECT_HOME + "/tmp/code_output";
 
     /**
      * 应用部署目录
      */
-    String CODE_DEPLOY_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_deploy";
+    String CODE_DEPLOY_ROOT_DIR = PROJECT_HOME + "/tmp/code_deploy";
 
     /**
      * 封面图目录
      */
-    String COVER_IMAGE_DIR = System.getProperty("user.dir") + "/tmp/screenshots";
+    String COVER_IMAGE_DIR = PROJECT_HOME + "/tmp/screenshots";
 
     int DEFAULT_WIDTH = 1296;
     int CROP_WIDTH = 16;

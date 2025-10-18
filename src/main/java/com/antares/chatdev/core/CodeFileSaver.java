@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 import com.antares.chatdev.ai.model.HtmlCodeResult;
 import com.antares.chatdev.ai.model.MultiFileCodeResult;
+import com.antares.chatdev.constant.AppConstant;
 import com.antares.chatdev.model.enums.CodeGenTypeEnum;
 
 import cn.hutool.core.io.FileUtil;
@@ -16,12 +17,6 @@ import cn.hutool.core.util.StrUtil;
  */
 @Deprecated
 public class CodeFileSaver {
-
-    /**
-     * 文件保存的根目录
-     */
-    private static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
-
     /**
      * 保存 HTML 网页代码
      *
@@ -56,7 +51,7 @@ public class CodeFileSaver {
      */
     private static String buildUniqueDir(String bizType) {
         String uniqueDirName = StrUtil.format("{}_{}", bizType, IdUtil.getSnowflakeNextIdStr());
-        String dirPath = FILE_SAVE_ROOT_DIR + File.separator + uniqueDirName;
+        String dirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + uniqueDirName;
         FileUtil.mkdir(dirPath);
         return dirPath;
     }
