@@ -52,12 +52,13 @@ public class UserController {
      */
     @PostMapping("register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
-        ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR);
-        String userAccount = userRegisterRequest.getUserAccount();
-        String userPassword = userRegisterRequest.getUserPassword();
-        String checkPassword = userRegisterRequest.getCheckPassword();
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
-        return ResultUtils.success(result);
+        // ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR);
+        // String userAccount = userRegisterRequest.getUserAccount();
+        // String userPassword = userRegisterRequest.getUserPassword();
+        // String checkPassword = userRegisterRequest.getCheckPassword();
+        // long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        // return ResultUtils.success(result);
+        throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "注册功能已关闭，如有需要请联系管理员");
     }
 
     @PostMapping("/login")
